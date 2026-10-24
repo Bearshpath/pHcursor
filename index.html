@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Phcursor Pro</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #111; color: #eee; font-family: sans-serif;
+               touch-action: none; overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Mode Switch Bar */
+  #mode-bar {
+    display: flex; background: #181818; border-bottom: 1px solid #333; z-index: 9999;
+    touch-action: manipulation;
+  }
+  .mode-btn {
+    flex: 1; padding: 12px 0; border: none; background: transparent; color: #888;
+    font-size: 14px; font-weight: bold; text-align: center; border-bottom: 3px solid transparent;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  .mode-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; background: #222; }
+
+  /* Mode 1: Wand/Touchpad Container */
+  #wand-view { flex: 1; display: flex; flex-direction: column; position: relative; }
+  
+  #pad { 
+    flex: 1; display: flex; flex-direction: column; justify-content: space-between;
+    padding: 15px 12px; box-sizing: border-box; transition: background .1s; position: relative;
+  }
+  #pad.on { background: #1d4ed8; }
+  
+  #pad.scroll-mode {
+    background: linear-gradient(90deg, #333 0%, #333 18%, #141414 18%, #141414 82%, #333 82%, #333 100%) !important;
+    border-left: 3px dashed #555;
+    border-right: 3px dashed #555;
+  }
+
+  /* Ergonomic Bottom-Right Cluster */
+  #wand-controls-wrapper {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 14px;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 6px;
+    padding-right: 6px;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+
+  #right-button-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 110px;
+  }
+
+  .stack-btn {
+    width: 100%;
+    height: 76px;
+    border-radius: 16px;
+    background: #252525;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 17px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+    transition: background 0.1s, transform 0.05s, border-color 0.1s;
+  }
+  .stack-btn:active, .stack-btn.on {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    transform: scale(0.97);
+  }
+
+  .power-btn {
+    background: #1c1c1c;
+    border-color: #383838;
+  }
+  .power-btn svg {
+    stroke: #888;
+    transition: stroke 0.1s, transform 0.1s;
+  }
+  .power-btn.on {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.45);
+  }
+  .power-btn.on svg {
+    stroke: #fff;
+    transform: scale(1.1);
+  }
+
+  #alt-tab-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #alt-tab-track {
+    width: 50px;
+    height: 120px;
+    background: #1c1c1c;
+    border: 1px solid #444;
+    border-radius: 26px;
+    position: relative;
+    touch-action: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  #alt-tab-track.active {
+    border-color: #3b82f6;
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+    background: #1e293b;
+  }
+  #alt-tab-thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #444;
+    position: absolute;
+    left: 3px;
+    bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #bbb;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2), background 0.2s, color 0.2s;
+    user-select: none;
+  }
+  #alt-tab-track.active #alt-tab-thumb {
+    background: #3b82f6;
+    color: #fff;
+    transform: translateY(-68px);
+  }
+  .track-indicators {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    box-sizing: border-box;
+    pointer-events: none;
+    font-size: 9px;
+    font-weight: bold;
+    color: #555;
+  }
+  #alt-tab-track.active .track-indicators .ind-top {
+    color: #3b82f6;
+  }
+
+  #pad-instructions {
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: .75;
+    padding: 4px 6px;
+    margin-top: 15px;
+  }
+  #status { font-size: 12px; opacity: .6; margin-top: 4px; }
+  
+  #bar { padding: 12px 10px; background: #181818; border-top: 1px solid #282828; }
+  #sens { width: 100%; touch-action: pan-x; margin-bottom: 10px; }
+  .row { display: grid; gap: 10px; }
+  .row.two { grid-template-columns: 1fr 1fr; }
+  .bottom-btn { 
+    height: 48px; font-size: 15px; font-weight: bold; border-radius: 10px; background: #2a2a2a; border: 1px solid #444; color: #fff; 
+  }
+  .bottom-btn.on { background: #10b981; border-color: #10b981; }
+
+  /* Mode 2: Screen Mirror & Draw Container */
+  #mirror-view {
+    display: none; flex: 1; position: relative; overflow: hidden; background: #000;
+  }
+  #mirror-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  }
+
+  /* Clean Uncluttered Floating Toolbar */
+  #mirror-tools {
+    position: absolute; bottom: 12px; left: 10px; right: 10px;
+    background: rgba(24, 24, 24, 0.94); backdrop-filter: blur(10px);
+    border: 1px solid #444; border-radius: 14px; padding: 10px 8px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 10;
+  }
+  .tool-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .tool-row button { height: 38px; padding: 0 8px; font-size: 13px; border-radius: 8px; flex: 1; border: 0; background: #333; color: #fff; font-weight: bold; }
+  
+  /* Color Dots */
+  .color-group { display: flex; align-items: center; gap: 6px; }
+  .color-dot {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid #555; flex-shrink: 0;
+  }
+  .color-dot.active { border-color: #fff; transform: scale(1.15); }
+
+  /* The Plus Button for Custom Color & Brush Size */
+  #btn-more-tools {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px dashed #888;
+    background: #252525; color: #fff; font-size: 16px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    cursor: pointer;
+  }
+  #btn-more-tools.active { border-color: #3b82f6; background: #1e3a8a; }
+
+  /* Expanded Settings Panel (Opens directly above toolbar) */
+  #popup-settings {
+    display: none; position: absolute; bottom: 108px; left: 12px; right: 12px;
+    background: rgba(22, 22, 22, 0.98); backdrop-filter: blur(14px);
+    border: 1px solid #555; border-radius: 16px; padding: 14px;
+    z-index: 20; box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+    flex-direction: column; gap: 12px;
+  }
+  #popup-settings.show { display: flex; }
+
+  .popup-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #333; padding-bottom: 6px; font-size: 13px; font-weight: bold; color: #aaa;
+  }
+  .popup-close {
+    background: transparent; border: none; color: #aaa; font-size: 18px; font-weight: bold; padding: 0 4px;
+  }
+
+  .settings-section { display: flex; flex-direction: column; gap: 6px; }
+  .section-label { font-size: 12px; font-weight: bold; color: #3b82f6; display: flex; justify-content: space-between; }
+
+  /* Slider Row with Steppers */
+  .slider-row { display: flex; align-items: center; gap: 8px; }
+  .step-btn {
+    width: 34px; height: 34px; background: #333; border: 1px solid #555; border-radius: 8px;
+    color: #fff; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center;
+  }
+  #large-brush-slider { flex: 1; height: 6px; }
+
+  /* Quick Brush Size Presets */
+  .preset-row { display: flex; gap: 6px; justify-content: space-between; }
+  .preset-btn {
+    flex: 1; height: 28px; background: #262626; border: 1px solid #444; border-radius: 6px;
+    font-size: 11px; font-weight: bold; color: #ddd;
+  }
+  .preset-btn.active { background: #3b82f6; border-color: #3b82f6; }
+
+  /* Hex Input Row */
+  .hex-input-row { display: flex; align-items: center; gap: 8px; }
+  #hex-input {
+    flex: 1; height: 36px; background: #161616; border: 1px solid #444; border-radius: 8px;
+    padding: 0 10px; color: #fff; font-family: monospace; font-size: 14px; text-transform: uppercase;
+  }
+  #hex-preview {
+    width: 36px; height: 36px; border-radius: 8px; border: 2px solid #555; flex-shrink: 0;
+  }
+  .native-picker-wrap {
+    position: relative; width: 36px; height: 36px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+    background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); border: 2px solid #555;
+  }
+  #native-color-picker {
+    position: absolute; opacity: 0; width: 200%; height: 200%; top: -50%; left: -50%; cursor: pointer;
+  }
+
+  #btn-show-ui {
+    display: none; position: fixed; top: 14px; right: 14px; z-index: 50;
+    background: rgba(35, 35, 35, 0.85); backdrop-filter: blur(6px);
+    border: 1px solid #555; border-radius: 50%; width: 44px; height: 44px;
+    font-size: 20px; color: #fff; justify-content: center; align-items: center;
+  }
+
+  #overlay { position: fixed; inset: 0; background: #111; display: flex; align-items: center; justify-content: center; z-index: 10000; }
+  #start { font-size: 22px; padding: 18px 32px; background: #3b82f6; border-radius: 12px; border: 0; color: #fff; font-weight: bold; }
+  
+  #kb-input {
+    position: fixed; bottom: 10px; right: 10px; width: 1px; height: 1px;
+    opacity: 0.01; border: none; padding: 0; margin: 0; z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+<button id="btn-show-ui">👁️</button>
+
+<div id="mode-bar">
+  <button id="btn-mode-wand" class="mode-btn active">📱 Wand Mode</button>
+  <button id="btn-mode-mirror" class="mode-btn">🖥️ Mirror &amp; Draw</button>
+</div>
+
+<!-- Mode 1: Wand & Mouse Pad -->
+<div id="wand-view">
+  <div id="pad">
+    <div id="pad-instructions">
+      Tap <b>⏻</b> to toggle Gyro on/off<br>
+      Tap <b>⇥</b> to Alt+Tab, slide down to release
+      <div id="status">not connected</div>
+    </div>
+
+    <!-- Ergonomic Bottom-Right Cluster -->
+    <div id="wand-controls-wrapper">
+      <div id="alt-tab-wrapper">
+        <div id="alt-tab-track">
+          <div class="track-indicators">
+            <span class="ind-top">TAB</span>
+            <span class="ind-bot">OFF</span>
+          </div>
+          <div id="alt-tab-thumb">⇥</div>
+        </div>
+      </div>
+
+      <div id="right-button-stack">
+        <button id="gyro-power" class="stack-btn power-btn" title="Toggle Gyro">
+          <svg viewBox="0 0 24 24" width="34" height="34" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
+        <button id="right" class="stack-btn">RIGHT</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bar">
+    <input id="sens" type="range" min="10" max="120" value="40">
+    <div class="row two">
+      <button id="scroll-toggle" class="bottom-btn">SCROLL</button>
+      <button id="kb" class="bottom-btn">⌨ Keybd</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mode 2: Screen Mirror & Full Annotation -->
+<div id="mirror-view">
+  <canvas id="mirror-canvas"></canvas>
+
+  <!-- Expanded Settings Panel: Large Slider, Presets & Hex Code Input -->
+  <div id="popup-settings">
+    <div class="popup-header">
+      <span>TOOL CONFIGURATION</span>
+      <button class="popup-close" id="btn-close-popup">✕</button>
+    </div>
+
+    <!-- Brush Size Controls -->
+    <div class="settings-section">
+      <div class="section-label">
+        <span>BRUSH THICKNESS</span>
+        <span id="popup-size-text">4 px</span>
+      </div>
+      <div class="slider-row">
+        <button class="step-btn" id="btn-step-dec">−</button>
+        <input type="range" id="large-brush-slider" min="1" max="30" value="4">
+        <button class="step-btn" id="btn-step-inc">+</button>
+      </div>
+      <!-- Quick Exact Presets (Instant 6px or 8px) -->
+      <div class="preset-row">
+        <button class="preset-btn" data-size="2">2px</button>
+        <button class="preset-btn active" data-size="4">4px</button>
+        <button class="preset-btn" data-size="6">6px</button>
+        <button class="preset-btn" data-size="8">8px</button>
+        <button class="preset-btn" data-size="12">12px</button>
+        <button class="preset-btn" data-size="18">18px</button>
+      </div>
+    </div>
+
+    <!-- Custom Hex Code Input -->
+    <div class="settings-section">
+      <div class="section-label">
+        <span>CUSTOM / HEX COLOR</span>
+      </div>
+      <div class="hex-input-row">
+        <div id="hex-preview" style="background:#ef4444;"></div>
+        <input type="text" id="hex-input" value="#EF4444" placeholder="#RRGGBB" maxlength="7">
+        <div class="native-picker-wrap" title="OS Color Palette">
+          <input type="color" id="native-color-picker" value="#ef4444">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Toolbar: Fits cleanly with zero overflow -->
+  <div id="mirror-tools">
+    <!-- Row 1: Presets, "+" More Tools, Undo, Clear -->
+    <div class="tool-row">
+      <div class="color-group">
+        <div class="color-dot active" style="background:#ef4444;" data-color="#ef4444"></div>
+        <div class="color-dot" style="background:#facc15;" data-color="#facc15"></div>
+        <div class="color-dot" style="background:#10b981;" data-color="#10b981"></div>
+        <div class="color-dot" style="background:#38bdf8;" data-color="#38bdf8"></div>
+        <!-- The Plus Button to expand settings -->
+        <button id="btn-more-tools" title="Brush Size &amp; Custom Hex Color">+</button>
+      </div>
+
+      <button id="btn-draw-undo">↩ Undo</button>
+      <button id="btn-draw-clear">🧹 Clear</button>
+    </div>
+
+    <!-- Row 2: Zoom, Gyro and Viewport Controls -->
+    <div class="tool-row">
+      <button id="btn-zoom-in">+</button>
+      <button id="btn-zoom-out">-</button>
+      <button id="btn-zoom-reset">Fit H</button>
+      <button id="btn-mirror-gyro">Gyro: OFF</button>
+      <button id="btn-hide-ui">👁️ Hide UI</button>
+    </div>
+  </div>
+</div>
+
+<input id="kb-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text">
+<div id="overlay"><button id="start">Tap to start</button></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pad = $('pad'), statusEl = $('status'), kbBtn = $('kb'), kbInput = $('kb-input');
+const wandView = $('wand-view'), mirrorView = $('mirror-view'), mirrorCanvas = $('mirror-canvas');
+const modeBar = $('mode-bar'), mirrorTools = $('mirror-tools'), btnShowUi = $('btn-show-ui');
+const scrollBtn = $('scroll-toggle'), padInstructions = $('pad-instructions'), gyroPowerBtn = $('gyro-power');
+const altTabTrack = $('alt-tab-track'), altTabThumb = $('alt-tab-thumb');
+
+// Settings Popup Elements
+const popupSettings = $('popup-settings'), btnMoreTools = $('btn-more-tools'), btnClosePopup = $('btn-close-popup');
+const largeBrushSlider = $('large-brush-slider'), popupSizeText = $('popup-size-text');
+const btnStepDec = $('btn-step-dec'), btnStepInc = $('btn-step-inc');
+const hexInput = $('hex-input'), hexPreview = $('hex-preview'), nativeColorPicker = $('native-color-picker');
+
+const DEG = 180 / Math.PI;
+
+// Extract secure pairing token from current URL
+const urlParams = new URLSearchParams(window.location.search);
+const sessionToken = urlParams.get('token') || '';
+
+// App Modes
+let activeMode = 'wand';
+let mirrorGyroEnabled = false;
+let scrollModeActive = false;
+let gyroPowerOn = false;
+
+function setupModeButton(btnId, mode) {
+  const btn = $(btnId);
+  const trigger = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    switchMode(mode);
+  };
+  btn.addEventListener('pointerdown', trigger);
+  btn.addEventListener('click', trigger);
+}
+setupModeButton('btn-mode-wand', 'wand');
+setupModeButton('btn-mode-mirror', 'mirror');
+
+function switchMode(mode) {
+  activeMode = mode;
+  $('btn-mode-wand').classList.toggle('active', mode === 'wand');
+  $('btn-mode-mirror').classList.toggle('active', mode === 'mirror');
+  wandView.style.display = mode === 'wand' ? 'flex' : 'none';
+  mirrorView.style.display = mode === 'mirror' ? 'block' : 'none';
+  popupSettings.classList.remove('show');
+  btnMoreTools.classList.remove('active');
+  send({ mirror: mode === 'mirror' });
+  if (mode === 'mirror') {
+    resizeMirrorCanvas();
+    applyDefaultFitHeightZoom();
+  }
+}
+
+// Power Button
+gyroPowerBtn.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  gyroPowerOn = !gyroPowerOn;
+  gyroPowerBtn.classList.toggle('on', gyroPowerOn);
+  pad.classList.toggle('on', gyroPowerOn);
+});
+
+async function enterFullscreen() {
+  try {
+    const el = document.documentElement;
+    if (el.requestFullscreen) await el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+  } catch (_) {}
+}
+
+$('btn-hide-ui').onclick = () => {
+  modeBar.style.display = 'none';
+  mirrorTools.style.display = 'none';
+  popupSettings.classList.remove('show');
+  btnShowUi.style.display = 'flex';
+  setTimeout(resizeMirrorCanvas, 50);
+};
+
+btnShowUi.onclick = () => {
+  modeBar.style.display = 'flex';
+  mirrorTools.style.display = 'flex';
+  btnShowUi.style.display = 'none';
+  setTimeout(resizeMirrorCanvas, 50);
+};
+
+// Tuning
+let gain = 40;
+const flipX = 1;
+const flipY = -1;
+const DEAD = 0.4;
+const SIGN = /iPhone|iPad/.test(navigator.userAgent) ? -1 : 1;
+$('sens').oninput = e => gain = +e.target.value;
+
+// Connection
+let ws, connected = false;
+const ctx = mirrorCanvas.getContext('2d');
+let laptopCursor = { x: 0.5, y: 0.5 };
+let zoomLevel = 1.0;
+let lastBitmap = null;
+let baseW = 0, baseH = 0, baseOffsetX = 0, baseOffsetY = 0;
+let localStrokes = [];
+
+function connect() {
+  ws = new WebSocket(`wss://${location.host}/ws?token=${sessionToken}`);
+  ws.binaryType = 'arraybuffer';
+  ws.onopen = () => { connected = true; statusEl.textContent = 'connected (authenticated)'; };
+  ws.onmessage = async ev => {
+    if (ev.data instanceof ArrayBuffer && activeMode === 'mirror') {
+      const view = new DataView(ev.data);
+      laptopCursor.x = view.getUint16(0) / 65535.0;
+      laptopCursor.y = view.getUint16(2) / 65535.0;
+      const jpegBlob = new Blob([new Uint8Array(ev.data, 4)], { type: 'image/jpeg' });
+      lastBitmap = await createImageBitmap(jpegBlob);
+      renderMirrorFrame(lastBitmap);
+      send({ ack_frame: 1 });
+    }
+  };
+  ws.onclose = (e) => { 
+    connected = false; 
+    statusEl.textContent = e.code === 1008 ? 'Unauthorized: Token Mismatch' : 'reconnecting...';
+    if (e.code !== 1008) setTimeout(connect, 1000); 
+  };
+}
+const send = o => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
+
+// Canvas Sizing
+function resizeMirrorCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  mirrorCanvas.width = mirrorView.clientWidth * dpr;
+  mirrorCanvas.height = mirrorView.clientHeight * dpr;
+  if (lastBitmap) renderMirrorFrame(lastBitmap);
+}
+window.addEventListener('resize', resizeMirrorCanvas);
+
+function applyDefaultFitHeightZoom() {
+  if (!lastBitmap) return;
+  const cw = mirrorCanvas.width, ch = mirrorCanvas.height;
+  const ar = lastBitmap.width / lastBitmap.height;
+  zoomLevel = ch / (cw / ar);
+  renderMirrorFrame(lastBitmap);
+}
+
+function renderMirrorFrame(bmp) {
+  const cw = mirrorCanvas.width, ch = mirrorCanvas.height;
+  ctx.clearRect(0, 0, cw, ch);
+  
+  const ar = bmp.width / bmp.height;
+  baseW = cw;
+  baseH = cw / ar;
+  baseOffsetX = 0;
+  baseOffsetY = (ch - baseH) / 2;
+  
+  if (baseH > ch) {
+    baseH = ch;
+    baseW = ch * ar;
+    baseOffsetX = (cw - baseW) / 2;
+    baseOffsetY = 0;
+  }
+
+  ctx.save();
+  const cx = baseOffsetX + laptopCursor.x * baseW;
+  const cy = baseOffsetY + laptopCursor.y * baseH;
+
+  ctx.translate(cx, cy);
+  ctx.scale(zoomLevel, zoomLevel);
+  ctx.translate(-cx, -cy);
+
+  // Desktop capture
+  ctx.drawImage(bmp, baseOffsetX, baseOffsetY, baseW, baseH);
+
+  // Synchronized Local Strokes
+  for (let s = 0; s < localStrokes.length; s++) {
+    const stroke = localStrokes[s];
+    if (stroke.points.length === 0) continue;
+    ctx.strokeStyle = stroke.color;
+    ctx.fillStyle = stroke.color;
+    ctx.lineWidth = stroke.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    const p0 = stroke.points[0];
+    const x0 = baseOffsetX + p0.x * baseW;
+    const y0 = baseOffsetY + p0.y * baseH;
+    ctx.arc(x0, y0, stroke.size / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (stroke.points.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      for (let i = 1; i < stroke.points.length; i++) {
+        const pt = stroke.points[i];
+        ctx.lineTo(baseOffsetX + pt.x * baseW, baseOffsetY + pt.y * baseH);
+      }
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+// Zoom Buttons
+$('btn-zoom-in').onclick = () => {
+  zoomLevel = Math.min(zoomLevel + 0.5, 8.0);
+  if (lastBitmap) renderMirrorFrame(lastBitmap);
+};
+$('btn-zoom-out').onclick = () => {
+  zoomLevel = Math.max(zoomLevel - 0.5, 0.8);
+  if (lastBitmap) renderMirrorFrame(lastBitmap);
+};
+$('btn-zoom-reset').onclick = () => {
+  if (!lastBitmap) return;
+  const cw = mirrorCanvas.width, ch = mirrorCanvas.height;
+  const fitHeightZoom = ch / (cw / (lastBitmap.width / lastBitmap.height));
+  zoomLevel = Math.abs(zoomLevel - fitHeightZoom) < 0.2 ? 1.0 : fitHeightZoom;
+  renderMirrorFrame(lastBitmap);
+};
+
+// Colors & Brush Size Settings
+let currentColor = '#ef4444';
+let currentBrushSize = 4;
+
+function setBrushSize(size) {
+  currentBrushSize = Math.max(1, Math.min(30, size));
+  largeBrushSlider.value = currentBrushSize;
+  popupSizeText.textContent = `${currentBrushSize} px`;
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', +btn.dataset.size === currentBrushSize);
+  });
+}
+
+function setColor(hex) {
+  currentColor = hex;
+  hexInput.value = hex.toUpperCase();
+  hexPreview.style.background = hex;
+  nativeColorPicker.value = hex;
+
+  document.querySelectorAll('.color-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.color && d.dataset.color.toLowerCase() === hex.toLowerCase());
+  });
+}
+
+// Preset Colors
+document.querySelectorAll('.color-dot').forEach(dot => {
+  dot.onclick = () => {
+    setColor(dot.dataset.color);
+  };
+});
+
+// Settings Popup Toggle
+btnMoreTools.onclick = (e) => {
+  e.stopPropagation();
+  const isOpen = popupSettings.classList.toggle('show');
+  btnMoreTools.classList.toggle('active', isOpen);
+};
+
+btnClosePopup.onclick = (e) => {
+  e.stopPropagation();
+  popupSettings.classList.remove('show');
+  btnMoreTools.classList.remove('active');
+};
+
+// Slider and Steppers
+largeBrushSlider.oninput = (e) => setBrushSize(+e.target.value);
+btnStepDec.onclick = () => setBrushSize(currentBrushSize - 1);
+btnStepInc.onclick = () => setBrushSize(currentBrushSize + 1);
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.onclick = () => setBrushSize(+btn.dataset.size);
+});
+
+// Hex Input
+hexInput.oninput = (e) => {
+  let val = e.target.value.trim();
+  if (!val.startsWith('#')) val = '#' + val;
+  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+    setColor(val);
+  }
+};
+
+nativeColorPicker.oninput = (e) => {
+  setColor(e.target.value);
+};
+
+// Drawing Actions
+$('btn-draw-undo').onclick = () => {
+  localStrokes.pop();
+  if (lastBitmap) renderMirrorFrame(lastBitmap);
+  send({ draw: { type: 'undo' } });
+};
+$('btn-draw-clear').onclick = () => {
+  localStrokes = [];
+  if (lastBitmap) renderMirrorFrame(lastBitmap);
+  send({ draw: { type: 'clear' } });
+};
+
+$('btn-mirror-gyro').onclick = () => {
+  mirrorGyroEnabled = !mirrorGyroEnabled;
+  $('btn-mirror-gyro').textContent = mirrorGyroEnabled ? 'Gyro: ON' : 'Gyro: OFF';
+  $('btn-mirror-gyro').classList.toggle('on', mirrorGyroEnabled);
+};
+
+function getCanvasNormalizedCoords(clientX, clientY) {
+  const rect = mirrorCanvas.getBoundingClientRect();
+  const scaleX = mirrorCanvas.width / rect.width;
+  const scaleY = mirrorCanvas.height / rect.height;
+  const x = (clientX - rect.left) * scaleX;
+  const y = (clientY - rect.top) * scaleY;
+
+  const cx = baseOffsetX + laptopCursor.x * baseW;
+  const cy = baseOffsetY + laptopCursor.y * baseH;
+
+  const unzoomedX = (x - cx) / zoomLevel + cx;
+  const unzoomedY = (y - cy) / zoomLevel + cy;
+
+  const nx = (unzoomedX - baseOffsetX) / baseW;
+  const ny = (unzoomedY - baseOffsetY) / baseH;
+
+  return {
+    nx: Math.max(0, Math.min(1, nx)),
+    ny: Math.max(0, Math.min(1, ny))
+  };
+}
+
+let activeStroke = null;
+
+mirrorCanvas.addEventListener('touchstart', e => {
+  if (popupSettings.classList.contains('show') && !e.target.closest('#popup-settings')) {
+    popupSettings.classList.remove('show');
+    btnMoreTools.classList.remove('active');
+  }
+
+  e.preventDefault();
+  const t = e.touches[0];
+  const p = getCanvasNormalizedCoords(t.clientX, t.clientY);
+  
+  activeStroke = {
+    color: currentColor,
+    size: currentBrushSize,
+    points: [{ x: p.nx, y: p.ny }]
+  };
+  localStrokes.push(activeStroke);
+  if (lastBitmap) renderMirrorFrame(lastBitmap);
+
+  send({ draw: { type: 'down', x: p.nx, y: p.ny, color: currentColor, size: currentBrushSize } });
+});
+
+mirrorCanvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const p = getCanvasNormalizedCoords(t.clientX, t.clientY);
+
+  if (activeStroke) {
+    activeStroke.points.push({ x: p.nx, y: p.ny });
+    if (lastBitmap) renderMirrorFrame(lastBitmap);
+  }
+
+  send({ draw: { type: 'move', x: p.nx, y: p.ny, color: currentColor, size: currentBrushSize } });
+});
+
+mirrorCanvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  activeStroke = null;
+  send({ draw: { type: 'up' } });
+});
+
+// Air Mouse Sensor Fusion
+let holding = false, lastT = 0, fYaw = 0, fPitch = 0, remX = 0, remY = 0;
+let ux = 0, uy = 1, uz = 0;
+let acc = null;
+const soft = v => Math.abs(v) < DEAD ? 0 : v - Math.sign(v) * DEAD;
+
+function onGyro(wx, wy, wz, ts) {
+  const dt = 0.016;
+
+  ux -= (wy * uz - wz * uy) * dt;
+  uy -= (wz * ux - wx * uz) * dt;
+  uz -= (wx * uy - wy * ux) * dt;
+
+  if (acc) {
+    const al = Math.hypot(acc.x, acc.y, acc.z) || 1;
+    if (Math.abs(al - 9.81) < 2) {
+      const k = 0.03;
+      ux += k * (acc.x / al - ux); uy += k * (acc.y / al - uy); uz += k * (acc.z / al - uz);
+    }
+  }
+  const n = Math.hypot(ux, uy, uz) || 1; ux /= n; uy /= n; uz /= n;
+
+  const shouldMove = (activeMode === 'wand' && (gyroPowerOn || holding) && !scrollModeActive) || 
+                     (activeMode === 'mirror' && mirrorGyroEnabled);
+  if (!shouldMove) return;
+
+  const yaw = (wx * ux + wy * uy + wz * uz) * DEG;
+  const pitch = wx * DEG;
+
+  const speed = Math.hypot(yaw, pitch);
+  const a = 0.25 + 0.65 * Math.min(speed / 80, 1);
+  fYaw += a * (soft(yaw) - fYaw);
+  fPitch += a * (soft(pitch) - fPitch);
+
+  const g = gain * (1 + Math.hypot(fYaw, fPitch) / 120);
+  remX += -flipX * fYaw * dt * g;
+  remY += flipY * fPitch * dt * g;
+
+  const ix = Math.trunc(remX), iy = Math.trunc(remY);
+  if (ix || iy) { remX -= ix; remY -= iy; send({ dx: ix, dy: iy, t: performance.now() }); }
+}
+
+function startSensors() {
+  try {
+    const a = new Accelerometer({ frequency: 60 });
+    a.addEventListener('reading', () => { acc = { x: a.x, y: a.y, z: a.z }; });
+    a.start();
+    const g = new Gyroscope({ frequency: 60 });
+    g.addEventListener('reading', () => onGyro(g.x, g.y, g.z, g.timestamp));
+    g.start();
+  } catch (err) {
+    const k = Math.PI / 180;
+    window.addEventListener('devicemotion', e => {
+      const r = e.rotationRate, a = e.accelerationIncludingGravity;
+      if (!r || !a) return;
+      acc = { x: SIGN * a.x, y: SIGN * a.y, z: SIGN * a.z };
+      onGyro(r.beta * k, r.gamma * k, r.alpha * k, performance.now());
+    });
+  }
+}
+
+// Scrolling Engine
+let tDown = 0, t2Down = 0, singleTap = false, secondTap = false, scrolling = false;
+let scrollY = 0, startScrollY = 0, lastMoveT = 0, vel = 0, wheelRem = 0, momentumId = 0, lastFrame = 0;
+const avgY = t => (t[0].clientY + t[1].clientY) / 2;
+
+function emitWheel(units) {
+  wheelRem += units;
+  const w = Math.trunc(wheelRem);
+  if (w) { wheelRem -= w; send({ wheel: w }); }
+}
+function stopMomentum() { cancelAnimationFrame(momentumId); momentumId = 0; vel = 0; }
+function momentum(ts) {
+  const dt = lastFrame ? ts - lastFrame : 16;
+  lastFrame = ts;
+  if (Math.abs(vel) < 0.03) { momentumId = 0; return; }
+  emitWheel(vel * dt);
+  vel *= Math.pow(0.997, dt);
+  momentumId = requestAnimationFrame(momentum);
+}
+function startMomentum() {
+  if (momentumId) return;
+  if (performance.now() - lastMoveT > 80) { vel = 0; return; }
+  lastFrame = 0;
+  momentumId = requestAnimationFrame(momentum);
+}
+
+pad.addEventListener('touchstart', e => {
+  if (e.target.closest('#wand-controls-wrapper')) return;
+  e.preventDefault();
+  stopMomentum();
+  const n = e.targetTouches.length;
+
+  if (scrollModeActive) {
+    scrolling = true;
+    scrollY = startScrollY = e.targetTouches[0].clientY;
+    lastMoveT = performance.now();
+    vel = 0; wheelRem = 0;
+    return;
+  }
+
+  if (n === 1) { 
+    holding = true; singleTap = true; secondTap = false; scrolling = false; tDown = performance.now(); 
+  } else if (n === 2) { 
+    singleTap = false; secondTap = true; t2Down = performance.now(); scrollY = startScrollY = avgY(e.targetTouches);
+  }
+  if (!gyroPowerOn) pad.classList.toggle('on', holding);
+}, { passive: false });
+
+pad.addEventListener('touchmove', e => {
+  if (e.target.closest('#wand-controls-wrapper')) return;
+  e.preventDefault();
+  const now = performance.now();
+
+  if (scrollModeActive && scrolling) {
+    const y = e.targetTouches[0].clientY;
+    const units = (y - scrollY) * 3, dtm = Math.max(now - lastMoveT, 1);
+    emitWheel(units);
+    vel = 0.6 * vel + 0.4 * (units / dtm);
+    scrollY = y; lastMoveT = now;
+    return;
+  }
+
+  if (e.targetTouches.length < 2) return;
+  const y = avgY(e.targetTouches);
+  
+  if (!scrolling && Math.abs(y - startScrollY) > 12) {
+    scrolling = true; 
+    secondTap = false; 
+    holding = true;
+    if (!gyroPowerOn) pad.classList.add('on');
+    scrollY = y; lastMoveT = now; vel = 0; wheelRem = 0;
+    return;
+  }
+  if (scrolling) {
+    const units = (y - scrollY) * 3, dtm = Math.max(now - lastMoveT, 1);
+    emitWheel(units);
+    vel = 0.6 * vel + 0.4 * (units / dtm);
+    scrollY = y; lastMoveT = now;
+  }
+}, { passive: false });
+
+const end = e => {
+  if (e.target.closest('#wand-controls-wrapper')) return;
+  e.preventDefault();
+  const left = e.targetTouches.length, now = performance.now();
+
+  if (scrollModeActive) {
+    if (left === 0 && scrolling) {
+      startMomentum();
+      scrolling = false;
+    }
+    return;
+  }
+
+  if (left === 1) {
+    if (secondTap && !scrolling && now - t2Down < 250) send({ btn: 'left' });
+    secondTap = false;
+    if (scrolling) startMomentum();
+    scrolling = false;
+    holding = true;
+    if (!gyroPowerOn) pad.classList.add('on');
+  } else if (left === 0) {
+    if (singleTap && holding && now - tDown < 180) send({ btn: 'left' });
+    if (scrolling) startMomentum();
+    singleTap = secondTap = scrolling = holding = false;
+    if (!gyroPowerOn) pad.classList.remove('on');
+    fYaw = fPitch = remX = remY = 0;
+  }
+};
+pad.addEventListener('touchend', end, { passive: false });
+pad.addEventListener('touchcancel', end, { passive: false });
+
+// Right Mouse Button
+$('right').addEventListener('touchstart', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  $('right').classList.add('on');
+  send({ btn: 'right', act: 'down' });
+});
+$('right').addEventListener('touchend', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  $('right').classList.remove('on');
+  send({ btn: 'right', act: 'up' });
+});
+
+// Vertical Alt+Tab Switch
+let altActive = false;
+let startTouchY = 0;
+let isSlidingSwitch = false;
+
+function startAltTab() {
+  altActive = true;
+  altTabTrack.classList.add('active');
+  altTabThumb.style.transform = 'translateY(-68px)';
+  send({ alt_tab: 'start' });
+}
+
+function nextAltTab() {
+  altTabThumb.style.transform = 'translateY(-64px) scale(0.94)';
+  setTimeout(() => {
+    if (altActive) altTabThumb.style.transform = 'translateY(-68px)';
+  }, 80);
+  send({ alt_tab: 'next' });
+}
+
+function releaseAltTab() {
+  altActive = false;
+  altTabTrack.classList.remove('active');
+  altTabThumb.style.transform = 'translateY(0)';
+  send({ alt_tab: 'release' });
+}
+
+altTabTrack.addEventListener('touchstart', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  startTouchY = e.touches[0].clientY;
+  isSlidingSwitch = false;
+});
+
+altTabTrack.addEventListener('touchmove', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!altActive) return;
+
+  const dy = e.touches[0].clientY - startTouchY;
+  if (dy > 8) {
+    isSlidingSwitch = true;
+    const currentY = Math.min(0, -68 + dy);
+    altTabThumb.style.transition = 'none';
+    altTabThumb.style.transform = `translateY(${currentY}px)`;
+  }
+});
+
+altTabTrack.addEventListener('touchend', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  altTabThumb.style.transition = '';
+
+  if (isSlidingSwitch) {
+    const dy = e.changedTouches[0].clientY - startTouchY;
+    if (dy > 30) {
+      releaseAltTab();
+    } else {
+      altTabThumb.style.transform = 'translateY(-68px)';
+    }
+    isSlidingSwitch = false;
+  } else {
+    if (!altActive) {
+      startAltTab();
+    } else {
+      nextAltTab();
+    }
+  }
+});
+
+scrollBtn.addEventListener('click', e => {
+  e.preventDefault();
+  scrollModeActive = !scrollModeActive;
+  scrollBtn.classList.toggle('on', scrollModeActive);
+  pad.classList.toggle('scroll-mode', scrollModeActive);
+  
+  if (scrollModeActive) {
+    scrollBtn.textContent = 'SCROLLING';
+    padInstructions.innerHTML = '<b>SCROLL MODE ACTIVE</b><br>Slide finger anywhere to scroll with kinetic momentum!';
+    holding = false;
+    if (!gyroPowerOn) pad.classList.remove('on');
+  } else {
+    scrollBtn.textContent = 'SCROLL';
+    padInstructions.innerHTML = 'Tap <b>⏻</b> to toggle Gyro on/off<br>Tap <b>⇥</b> to Alt+Tab, slide down to release<div id="status">' + (connected ? 'connected' : 'not connected') + '</div>';
+  }
+});
+
+// Gboard Engine
+let kbOpen = false;
+const DUMMY_BUFFER = "                    ";
+
+function resetKbBuffer() {
+  kbInput.value = DUMMY_BUFFER;
+  kbInput.selectionStart = kbInput.selectionEnd = DUMMY_BUFFER.length;
+}
+
+function openKeyboard() {
+  kbOpen = true;
+  kbBtn.classList.add('on');
+  resetKbBuffer();
+  kbInput.focus();
+}
+
+function closeKeyboard() {
+  if (!kbOpen) return;
+  kbOpen = false;
+  kbBtn.classList.remove('on');
+  kbInput.blur();
+}
+
+kbBtn.onclick = e => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (kbOpen) closeKeyboard();
+  else openKeyboard();
+};
+
+document.addEventListener('touchstart', e => {
+  if (kbOpen && !e.target.closest('#kb') && !e.target.closest('#kb-input')) {
+    closeKeyboard();
+  }
+}, { passive: true });
+
+kbInput.addEventListener('blur', () => {
+  if (kbOpen) closeKeyboard();
+});
+
+kbInput.addEventListener('beforeinput', e => {
+  if (e.inputType === 'deleteWordBackward') {
+    send({ ctrl_backspace: true });
+    resetKbBuffer();
+  } else if (e.inputType === 'deleteContentBackward') {
+    send({ key: 'Backspace' });
+  } else if (e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph') {
+    send({ key: 'Enter' });
+    resetKbBuffer();
+  } else if (e.data) {
+    send({ text: e.data });
+  }
+});
+
+kbInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    send({ key: 'Enter' });
+    resetKbBuffer();
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    send({ key: 'Tab' });
+  }
+});
+
+kbInput.addEventListener('input', () => {
+  if (kbInput.value.length < 5) resetKbBuffer();
+});
+
+// Native Fullscreen on First Tap
+$('start').onclick = async () => {
+  await enterFullscreen();
+  try {
+    if (DeviceMotionEvent.requestPermission && await DeviceMotionEvent.requestPermission() !== 'granted') return;
+  } catch (_) {}
+  try { await navigator.wakeLock.request('screen'); } catch (_) {}
+  $('overlay').remove();
+  startSensors();
+  connect();
+};
+</script>
+</body>
+</html>
