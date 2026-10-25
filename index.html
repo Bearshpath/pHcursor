@@ -8,7 +8,6 @@
                touch-action: none; overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
   body { display: flex; flex-direction: column; overflow: hidden; }
 
-  /* Mode Switch Bar */
   #mode-bar {
     display: flex; background: #181818; border-bottom: 1px solid #333; z-index: 9999;
     touch-action: manipulation;
@@ -20,7 +19,6 @@
   }
   .mode-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; background: #222; }
 
-  /* Mode 1: Wand/Touchpad Container */
   #wand-view { flex: 1; display: flex; flex-direction: column; position: relative; }
   
   #pad { 
@@ -35,7 +33,6 @@
     border-right: 3px dashed #555;
   }
 
-  /* Ergonomic Bottom-Right Cluster */
   #wand-controls-wrapper {
     display: flex;
     align-items: flex-end;
@@ -52,23 +49,23 @@
   #right-button-stack {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     width: 110px;
   }
 
   .stack-btn {
     width: 100%;
-    height: 76px;
-    border-radius: 16px;
+    height: 64px;
+    border-radius: 14px;
     background: #252525;
     border: 1px solid #444;
     color: #fff;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.45);
     transition: background 0.1s, transform 0.05s, border-color 0.1s;
   }
   .stack-btn:active, .stack-btn.on {
@@ -177,7 +174,6 @@
   }
   .bottom-btn.on { background: #10b981; border-color: #10b981; }
 
-  /* Mode 2: Screen Mirror & Draw Container */
   #mirror-view {
     display: none; flex: 1; position: relative; overflow: hidden; background: #000;
   }
@@ -185,7 +181,6 @@
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   }
 
-  /* Clean Uncluttered Floating Toolbar */
   #mirror-tools {
     position: absolute; bottom: 12px; left: 10px; right: 10px;
     background: rgba(24, 24, 24, 0.94); backdrop-filter: blur(10px);
@@ -195,14 +190,12 @@
   .tool-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
   .tool-row button { height: 38px; padding: 0 8px; font-size: 13px; border-radius: 8px; flex: 1; border: 0; background: #333; color: #fff; font-weight: bold; }
   
-  /* Color Dots */
   .color-group { display: flex; align-items: center; gap: 6px; }
   .color-dot {
     width: 28px; height: 28px; border-radius: 50%; border: 2px solid #555; flex-shrink: 0;
   }
   .color-dot.active { border-color: #fff; transform: scale(1.15); }
 
-  /* The Plus Button for Custom Color & Brush Size */
   #btn-more-tools {
     width: 30px; height: 30px; border-radius: 50%; border: 2px dashed #888;
     background: #252525; color: #fff; font-size: 16px; font-weight: bold;
@@ -211,7 +204,6 @@
   }
   #btn-more-tools.active { border-color: #3b82f6; background: #1e3a8a; }
 
-  /* Expanded Settings Panel (Opens directly above toolbar) */
   #popup-settings {
     display: none; position: absolute; bottom: 108px; left: 12px; right: 12px;
     background: rgba(22, 22, 22, 0.98); backdrop-filter: blur(14px);
@@ -232,7 +224,6 @@
   .settings-section { display: flex; flex-direction: column; gap: 6px; }
   .section-label { font-size: 12px; font-weight: bold; color: #3b82f6; display: flex; justify-content: space-between; }
 
-  /* Slider Row with Steppers */
   .slider-row { display: flex; align-items: center; gap: 8px; }
   .step-btn {
     width: 34px; height: 34px; background: #333; border: 1px solid #555; border-radius: 8px;
@@ -240,7 +231,6 @@
   }
   #large-brush-slider { flex: 1; height: 6px; }
 
-  /* Quick Brush Size Presets */
   .preset-row { display: flex; gap: 6px; justify-content: space-between; }
   .preset-btn {
     flex: 1; height: 28px; background: #262626; border: 1px solid #444; border-radius: 6px;
@@ -248,7 +238,6 @@
   }
   .preset-btn.active { background: #3b82f6; border-color: #3b82f6; }
 
-  /* Hex Input Row */
   .hex-input-row { display: flex; align-items: center; gap: 8px; }
   #hex-input {
     flex: 1; height: 36px; background: #161616; border: 1px solid #444; border-radius: 8px;
@@ -290,7 +279,6 @@
   <button id="btn-mode-mirror" class="mode-btn">🖥️ Mirror &amp; Draw</button>
 </div>
 
-<!-- Mode 1: Wand & Mouse Pad -->
 <div id="wand-view">
   <div id="pad">
     <div id="pad-instructions">
@@ -299,7 +287,6 @@
       <div id="status">not connected</div>
     </div>
 
-    <!-- Ergonomic Bottom-Right Cluster -->
     <div id="wand-controls-wrapper">
       <div id="alt-tab-wrapper">
         <div id="alt-tab-track">
@@ -312,6 +299,7 @@
       </div>
 
       <div id="right-button-stack">
+        <button id="left" class="stack-btn">LEFT</button>
         <button id="gyro-power" class="stack-btn power-btn" title="Toggle Gyro">
           <svg viewBox="0 0 24 24" width="34" height="34" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
@@ -332,18 +320,15 @@
   </div>
 </div>
 
-<!-- Mode 2: Screen Mirror & Full Annotation -->
 <div id="mirror-view">
   <canvas id="mirror-canvas"></canvas>
 
-  <!-- Expanded Settings Panel: Large Slider, Presets & Hex Code Input -->
   <div id="popup-settings">
     <div class="popup-header">
       <span>TOOL CONFIGURATION</span>
       <button class="popup-close" id="btn-close-popup">✕</button>
     </div>
 
-    <!-- Brush Size Controls -->
     <div class="settings-section">
       <div class="section-label">
         <span>BRUSH THICKNESS</span>
@@ -354,7 +339,6 @@
         <input type="range" id="large-brush-slider" min="1" max="30" value="4">
         <button class="step-btn" id="btn-step-inc">+</button>
       </div>
-      <!-- Quick Exact Presets (Instant 6px or 8px) -->
       <div class="preset-row">
         <button class="preset-btn" data-size="2">2px</button>
         <button class="preset-btn active" data-size="4">4px</button>
@@ -365,7 +349,6 @@
       </div>
     </div>
 
-    <!-- Custom Hex Code Input -->
     <div class="settings-section">
       <div class="section-label">
         <span>CUSTOM / HEX COLOR</span>
@@ -380,16 +363,13 @@
     </div>
   </div>
 
-  <!-- Bottom Toolbar: Fits cleanly with zero overflow -->
   <div id="mirror-tools">
-    <!-- Row 1: Presets, "+" More Tools, Undo, Clear -->
     <div class="tool-row">
       <div class="color-group">
         <div class="color-dot active" style="background:#ef4444;" data-color="#ef4444"></div>
         <div class="color-dot" style="background:#facc15;" data-color="#facc15"></div>
         <div class="color-dot" style="background:#10b981;" data-color="#10b981"></div>
         <div class="color-dot" style="background:#38bdf8;" data-color="#38bdf8"></div>
-        <!-- The Plus Button to expand settings -->
         <button id="btn-more-tools" title="Brush Size &amp; Custom Hex Color">+</button>
       </div>
 
@@ -397,7 +377,6 @@
       <button id="btn-draw-clear">🧹 Clear</button>
     </div>
 
-    <!-- Row 2: Zoom, Gyro and Viewport Controls -->
     <div class="tool-row">
       <button id="btn-zoom-in">+</button>
       <button id="btn-zoom-out">-</button>
@@ -419,7 +398,6 @@ const modeBar = $('mode-bar'), mirrorTools = $('mirror-tools'), btnShowUi = $('b
 const scrollBtn = $('scroll-toggle'), padInstructions = $('pad-instructions'), gyroPowerBtn = $('gyro-power');
 const altTabTrack = $('alt-tab-track'), altTabThumb = $('alt-tab-thumb');
 
-// Settings Popup Elements
 const popupSettings = $('popup-settings'), btnMoreTools = $('btn-more-tools'), btnClosePopup = $('btn-close-popup');
 const largeBrushSlider = $('large-brush-slider'), popupSizeText = $('popup-size-text');
 const btnStepDec = $('btn-step-dec'), btnStepInc = $('btn-step-inc');
@@ -427,11 +405,9 @@ const hexInput = $('hex-input'), hexPreview = $('hex-preview'), nativeColorPicke
 
 const DEG = 180 / Math.PI;
 
-// Extract secure pairing token from current URL
 const urlParams = new URLSearchParams(window.location.search);
 const sessionToken = urlParams.get('token') || '';
 
-// App Modes
 let activeMode = 'wand';
 let mirrorGyroEnabled = false;
 let scrollModeActive = false;
@@ -465,7 +441,6 @@ function switchMode(mode) {
   }
 }
 
-// Power Button
 gyroPowerBtn.addEventListener('click', e => {
   e.preventDefault();
   e.stopPropagation();
@@ -497,7 +472,6 @@ btnShowUi.onclick = () => {
   setTimeout(resizeMirrorCanvas, 50);
 };
 
-// Tuning
 let gain = 40;
 const flipX = 1;
 const flipY = -1;
@@ -505,7 +479,6 @@ const DEAD = 0.4;
 const SIGN = /iPhone|iPad/.test(navigator.userAgent) ? -1 : 1;
 $('sens').oninput = e => gain = +e.target.value;
 
-// Connection
 let ws, connected = false;
 const ctx = mirrorCanvas.getContext('2d');
 let laptopCursor = { x: 0.5, y: 0.5 };
@@ -537,7 +510,6 @@ function connect() {
 }
 const send = o => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
 
-// Canvas Sizing
 function resizeMirrorCanvas() {
   const dpr = window.devicePixelRatio || 1;
   mirrorCanvas.width = mirrorView.clientWidth * dpr;
@@ -579,10 +551,8 @@ function renderMirrorFrame(bmp) {
   ctx.scale(zoomLevel, zoomLevel);
   ctx.translate(-cx, -cy);
 
-  // Desktop capture
   ctx.drawImage(bmp, baseOffsetX, baseOffsetY, baseW, baseH);
 
-  // Synchronized Local Strokes
   for (let s = 0; s < localStrokes.length; s++) {
     const stroke = localStrokes[s];
     if (stroke.points.length === 0) continue;
@@ -613,7 +583,6 @@ function renderMirrorFrame(bmp) {
   ctx.restore();
 }
 
-// Zoom Buttons
 $('btn-zoom-in').onclick = () => {
   zoomLevel = Math.min(zoomLevel + 0.5, 8.0);
   if (lastBitmap) renderMirrorFrame(lastBitmap);
@@ -630,7 +599,6 @@ $('btn-zoom-reset').onclick = () => {
   renderMirrorFrame(lastBitmap);
 };
 
-// Colors & Brush Size Settings
 let currentColor = '#ef4444';
 let currentBrushSize = 4;
 
@@ -655,14 +623,12 @@ function setColor(hex) {
   });
 }
 
-// Preset Colors
 document.querySelectorAll('.color-dot').forEach(dot => {
   dot.onclick = () => {
     setColor(dot.dataset.color);
   };
 });
 
-// Settings Popup Toggle
 btnMoreTools.onclick = (e) => {
   e.stopPropagation();
   const isOpen = popupSettings.classList.toggle('show');
@@ -675,7 +641,6 @@ btnClosePopup.onclick = (e) => {
   btnMoreTools.classList.remove('active');
 };
 
-// Slider and Steppers
 largeBrushSlider.oninput = (e) => setBrushSize(+e.target.value);
 btnStepDec.onclick = () => setBrushSize(currentBrushSize - 1);
 btnStepInc.onclick = () => setBrushSize(currentBrushSize + 1);
@@ -684,7 +649,6 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
   btn.onclick = () => setBrushSize(+btn.dataset.size);
 });
 
-// Hex Input
 hexInput.oninput = (e) => {
   let val = e.target.value.trim();
   if (!val.startsWith('#')) val = '#' + val;
@@ -697,7 +661,6 @@ nativeColorPicker.oninput = (e) => {
   setColor(e.target.value);
 };
 
-// Drawing Actions
 $('btn-draw-undo').onclick = () => {
   localStrokes.pop();
   if (lastBitmap) renderMirrorFrame(lastBitmap);
@@ -779,7 +742,6 @@ mirrorCanvas.addEventListener('touchend', e => {
   send({ draw: { type: 'up' } });
 });
 
-// Air Mouse Sensor Fusion
 let holding = false, lastT = 0, fYaw = 0, fPitch = 0, remX = 0, remY = 0;
 let ux = 0, uy = 1, uz = 0;
 let acc = null;
@@ -840,7 +802,6 @@ function startSensors() {
   }
 }
 
-// Scrolling Engine
 let tDown = 0, t2Down = 0, singleTap = false, secondTap = false, scrolling = false;
 let scrollY = 0, startScrollY = 0, lastMoveT = 0, vel = 0, wheelRem = 0, momentumId = 0, lastFrame = 0;
 const avgY = t => (t[0].clientY + t[1].clientY) / 2;
@@ -952,7 +913,19 @@ const end = e => {
 pad.addEventListener('touchend', end, { passive: false });
 pad.addEventListener('touchcancel', end, { passive: false });
 
-// Right Mouse Button
+$('left').addEventListener('touchstart', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  $('left').classList.add('on');
+  send({ btn: 'left', act: 'down' });
+});
+$('left').addEventListener('touchend', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  $('left').classList.remove('on');
+  send({ btn: 'left', act: 'up' });
+});
+
 $('right').addEventListener('touchstart', e => {
   e.preventDefault();
   e.stopPropagation();
@@ -966,7 +939,6 @@ $('right').addEventListener('touchend', e => {
   send({ btn: 'right', act: 'up' });
 });
 
-// Vertical Alt+Tab Switch
 let altActive = false;
 let startTouchY = 0;
 let isSlidingSwitch = false;
@@ -1053,7 +1025,6 @@ scrollBtn.addEventListener('click', e => {
   }
 });
 
-// Gboard Engine
 let kbOpen = false;
 const DUMMY_BUFFER = "                    ";
 
@@ -1122,7 +1093,6 @@ kbInput.addEventListener('input', () => {
   if (kbInput.value.length < 5) resetKbBuffer();
 });
 
-// Native Fullscreen on First Tap
 $('start').onclick = async () => {
   await enterFullscreen();
   try {
