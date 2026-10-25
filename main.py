@@ -15,7 +15,6 @@ from pynput.keyboard import Controller as KeyboardController, Key
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
-# Screen capture with MSS fallback
 try:
     import mss
     sct = mss.MSS() if hasattr(mss, "MSS") else mss.mss()
@@ -24,7 +23,6 @@ except Exception:
     from PIL import ImageGrab
     USE_MSS = False
 
-# DPI awareness for Windows display scaling
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
 except Exception:
@@ -36,17 +34,14 @@ mouse = MouseController()
 keyboard = KeyboardController()
 BUTTONS = {"left": Button.left, "right": Button.right}
 
-# Cryptographic Session Pairing Token (Generated fresh every run)
 SESSION_TOKEN = secrets.token_hex(4).upper()
 authenticated_client = None
 
-# Screen resolution
 user32 = ctypes.windll.user32
 SCREEN_W = user32.GetSystemMetrics(0)
 SCREEN_H = user32.GetSystemMetrics(1)
 
 
-# ---------- network helpers ----------
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -84,7 +79,6 @@ def make_ssl_context(ip):
     return ctx
 
 
-# ---------- server mouse actions ----------
 def wheel(delta):
     ctypes.windll.user32.mouse_event(0x0800, 0, 0, int(delta), 0)
 
@@ -105,7 +99,6 @@ def move_cursor(dx, dy):
     ctypes.windll.user32.SetCursorPos(p.x + dx, p.y + dy)
 
 
-# ---------- desktop transparent drawing overlay with Undo/Redo ----------
 overlay_root = None
 draw_canvas = None
 last_draw_pt = [None, None]
@@ -172,7 +165,6 @@ def draw_on_screen(action, norm_x=0, norm_y=0, color=None, size=None):
         last_draw_pt[0], last_draw_pt[1] = None, None
 
 
-# ---------- ZERO-TELEPORT TIMELINE PLAYBACK ENGINE ----------
 BUFFER_MS = 45
 MAX_STEP_PER_TICK = 32.0
 
@@ -267,8 +259,8 @@ def mover():
             move_cursor(ix, iy)
 
 
-# ---------- SCREEN MIRROR STREAMER ----------
 active_mirror_ws = {}
+
 
 def capture_desktop():
     if USE_MSS:
@@ -278,7 +270,6 @@ def capture_desktop():
     else:
         img = ImageGrab.grab()
     
-    # 1. Stamp real cursor at exact native scale
     cx, cy = get_cursor_pos()
     draw = ImageDraw.Draw(img)
     cursor_pts = [
@@ -292,14 +283,11 @@ def capture_desktop():
     ]
     draw.polygon(cursor_pts, fill="white", outline="black")
     
-    # 2. Crisp Resolution: If screen is >1600px, use high-quality BILINEAR downscale to 1600px.
-    # If 1080p or smaller, keep 100% native pixels (zero blur!)
     if SCREEN_W > 1600:
         target_w = 1600
         target_h = int(target_w * (SCREEN_H / SCREEN_W))
         img = img.resize((target_w, target_h), Image.Resampling.BILINEAR)
     
-    # 3. High quality JPEG (80% quality retains sharp font edges)
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=80, subsampling=0, optimize=False)
     return buf.getvalue(), cx, cy
@@ -334,23 +322,19 @@ async def mirror_loop():
 
 async def handler(ws):
     global authenticated_client
-    # Authenticate token on WebSocket upgrade
     req_path = getattr(ws, "request", None) and ws.request.path or ""
     query = urllib.parse.parse_qs(urllib.parse.urlparse(req_path).query)
     token = query.get("token", [None])[0]
 
     if token != SESSION_TOKEN:
-        print(f"Unauthorized connection rejected: Token {token} does not match.")
         await ws.close(1008, "Unauthorized: Invalid Session Token")
         return
 
     if authenticated_client is not None and authenticated_client != ws:
-        print("Rejected connection: Another device is already paired.")
         await ws.close(1008, "Locked: Another device is active.")
         return
 
     authenticated_client = ws
-    print(f"Device paired successfully! [Token: {SESSION_TOKEN}]")
 
     with tl_lock:
         play_clock[0] = None
@@ -438,14 +422,12 @@ async def handler(ws):
         mouse.release(Button.left)
         mouse.release(Button.right)
         keyboard.release(Key.alt)
-        print("Phone disconnected")
 
 
 def process_request(connection, request):
     if request.path.startswith("/ws"):
         return None
     
-    # Verify session token for HTML requests
     parsed = urllib.parse.urlparse(request.path)
     params = urllib.parse.parse_qs(parsed.query)
     token = params.get("token", [None])[0]
@@ -473,10 +455,9 @@ async def server_main(ctx):
         await asyncio.Future()
 
 
-# ---------- UI ----------
 def show_ui(url):
     root = tk.Tk()
-    root.title("Phcursor Pro - Secure Remote")
+    root.title("Phcursor Pro")
     root.configure(bg="#1e1e1e")
     kw = dict(fg="white", bg="#1e1e1e")
     
@@ -500,7 +481,7 @@ def show_ui(url):
 if __name__ == "__main__":
     ip = get_ip()
     if ip is None:
-        print("No network found. Connect to WiFi or a hotspot and restart.")
+        pass
     else:
         ctx = make_ssl_context(ip)
         threading.Thread(target=mover, daemon=True).start()
