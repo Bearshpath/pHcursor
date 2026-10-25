@@ -261,7 +261,6 @@ def mover():
 
 active_mirror_ws = {}
 
-
 def capture_desktop():
     if USE_MSS:
         monitor = sct.monitors[1]
@@ -457,7 +456,7 @@ async def server_main(ctx):
 
 def show_ui(url):
     root = tk.Tk()
-    root.title("Phcursor Pro")
+    root.title("Phcursor Pro - Secure Remote")
     root.configure(bg="#1e1e1e")
     kw = dict(fg="white", bg="#1e1e1e")
     
@@ -481,7 +480,7 @@ def show_ui(url):
 if __name__ == "__main__":
     ip = get_ip()
     if ip is None:
-        pass
+        print("No network found. Connect to WiFi or a hotspot and restart.")
     else:
         ctx = make_ssl_context(ip)
         threading.Thread(target=mover, daemon=True).start()
